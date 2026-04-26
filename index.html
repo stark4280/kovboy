@@ -266,6 +266,14 @@ let locked = false;
 let activeBg = "A";
 const target = 25;
 
+// Ses
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
 const photos = [
   { max: 5,  src: "abim0.jpg"  },
   { max: 10, src: "abim5.jpg"  },
@@ -369,10 +377,10 @@ function spawnConfetti() {
 function shoot() {
   if (locked) return;
 
-  const gun    = document.getElementById("gun");
+  const gun         = document.getElementById("gun");
   const reloadAudio = document.getElementById("reload");
-  const music  = document.getElementById("music");
-  const rt     = document.getElementById("reloadText");
+  const music       = document.getElementById("music");
+  const rt          = document.getElementById("reloadText");
 
   if (age === 0) {
     music.volume = 0.28;
@@ -383,20 +391,10 @@ function shoot() {
     locked = true;
     rt.style.opacity = "1";
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    fetch("reload.mp3")
-      .then(r => r.arrayBuffer())
-      .then(buf => audioCtx.decodeAudioData(buf))
-      .then(decoded => {
-        const source = audioCtx.createBufferSource();
-        const gain   = audioCtx.createGain();
-        gain.gain.value = 3.0;
-        source.buffer = decoded;
-        source.playbackRate.value = 0.9;
-        source.connect(gain);
-        gain.connect(audioCtx.destination);
-        source.start(0);
-      });
+    reloadAudio.currentTime = 0;
+    reloadAudio.volume = 1.0;
+    reloadAudio.playbackRate = 0.9;
+    reloadAudio.play().catch(() => {});
 
     document.body.style.animation = "shake 0.2s";
     setTimeout(() => document.body.style.animation = "", 200);
@@ -414,9 +412,9 @@ function shoot() {
   age++;
 
   gun.currentTime = 0;
-  gun.volume = 0.3;
+  gun.volume = 0.05;
   gun.playbackRate = 0.82 + Math.random() * 0.08;
-  gun.play();
+  gun.play().catch(() => {});
 
   document.body.style.animation = "shake 0.15s";
   setTimeout(() => document.body.style.animation = "", 150);
