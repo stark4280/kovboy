@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Western Birthday 🤠</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
-
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   height: 100vh;
@@ -15,38 +15,71 @@ body {
   overflow: hidden;
   background: black;
   color: #f5e6c8;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.7);
 }
 
-/* FOTO LAYER - FULL CENTER CONTROL */
 #bg {
   position: fixed;
   inset: 0;
-  background-size: contain;      
-  background-position: center;   
-  background-repeat: no-repeat;  
-  background-color: #000;        
-  transition: all 0.6s ease;
+  z-index: 0;
+  background-color: #000;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
   filter: brightness(0.75) contrast(1.05);
+}
+
+#bgA, #bgB {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  transition: opacity 0.6s ease;
+  overflow: hidden;
+}
+#bgB { opacity: 0; }
+
+/* blur dolgu katmanı */
+#bgA::before, #bgB::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background-image: inherit;
+  background-size: cover;
+  background-position: center;
+  filter: blur(18px) brightness(0.5) saturate(0.8);
   z-index: 0;
 }
 
-/* cinematic overlay */
-.overlay {
-  position: fixed;
+/* asıl fotoğraf - contain, kesme yok */
+#bgA::after, #bgB::after {
+  content: '';
+  position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.9));
+  background-image: inherit;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.88) contrast(1.08) saturate(1.1);
   z-index: 1;
 }
 
-/* HUD */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.88));
+  z-index: 1;
+}
+
 .hud {
   position: absolute;
   top: 15px;
   left: 15px;
   right: 15px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   z-index: 3;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .hud-box {
@@ -54,9 +87,17 @@ body {
   border: 1px solid rgba(255,215,0,0.25);
   padding: 8px 12px;
   border-radius: 8px;
+  font-size: 14px;
 }
 
-/* CENTER UI */
+.hud-box.rutbe {
+  font-size: clamp(14px, 2vw, 26px);
+  padding: clamp(8px, 1.2vw, 12px) clamp(12px, 1.8vw, 22px);
+  border-color: rgba(255,215,0,0.5);
+  color: #ffd27d;
+  letter-spacing: 1px;
+}
+
 .center {
   position: relative;
   z-index: 3;
@@ -66,36 +107,39 @@ body {
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 0 20px;
 }
 
 h1 {
-  font-size: 52px;
+  font-size: clamp(28px, 6vw, 52px);
   margin: 0;
 }
 
 #age {
-  font-size: 120px;
+  font-size: clamp(72px, 18vw, 120px);
   margin: 10px 0;
-  transition: transform .12s ease;
+  line-height: 1;
 }
 
 #text {
-  opacity: 0.85;
-  min-height: 25px;
-  font-size: 20px;
+  opacity: 0.9;
+  min-height: 50px;
+  font-size: clamp(14px, 2.5vw, 19px);
+  max-width: 560px;
+  line-height: 1.5;
 }
 
-/* BUTTON */
 button {
   margin-top: 20px;
   padding: 14px 30px;
-  font-size: 18px;
+  font-size: clamp(15px, 2.5vw, 18px);
   border-radius: 10px;
   border: 1px solid rgba(255,215,0,0.4);
   background: rgba(0,0,0,0.5);
   color: #ffd27d;
   cursor: pointer;
   transition: 0.2s;
+  font-family: 'Cinzel', serif;
 }
 
 button:hover {
@@ -103,7 +147,6 @@ button:hover {
   background: rgba(255,215,0,0.2);
 }
 
-/* BULLETS */
 .bullets {
   display: flex;
   gap: 6px;
@@ -122,69 +165,85 @@ button:hover {
   box-shadow: 0 0 5px #ffd27d;
 }
 
-/* RELOAD TEXT */
 #reloadText {
   position: fixed;
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  font-size: 22px;
+  font-size: clamp(16px, 3vw, 22px);
   font-weight: bold;
   color: #ffd27d;
   opacity: 0;
   transition: opacity 0.2s ease;
   text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
   pointer-events: none;
+  white-space: nowrap;
 }
 
-/* shake */
 @keyframes shake {
-  0% { transform: translate(0); }
-  25% { transform: translate(3px,-3px); }
-  50% { transform: translate(-3px,3px); }
-  75% { transform: translate(3px,3px); }
+  0%   { transform: translate(0); }
+  20%  { transform: translate(4px, -4px); }
+  40%  { transform: translate(-4px, 4px); }
+  60%  { transform: translate(4px, 4px); }
+  80%  { transform: translate(-4px, -4px); }
   100% { transform: translate(0); }
 }
 
-/* zoom effect */
-.zoom {
-  transform: scale(1.03);
-  transition: transform 0.15s ease;
-}
-
-/* FINAL */
 #final {
   position: fixed;
   inset: 0;
   display: none;
-  background: rgba(0,0,0,0.92);
+  background: rgba(0,0,0,0.55);
   z-index: 10;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   text-align: center;
+  padding: 20px;
+}
+
+#final h1 {
+  font-size: clamp(28px, 6vw, 52px);
+}
+
+#final p {
+  font-size: clamp(16px, 3vw, 24px);
+  margin-top: 10px;
+}
+
+/* KONFETI */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 11;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 </style>
 </head>
-
 <body>
 
-<div id="bg"></div>
+<div id="bgA"></div>
+<div id="bgB"></div>
 <div class="overlay"></div>
 
 <div class="hud">
-  <div class="hud-box">AGE: <span id="hudAge">0</span></div>
-  <div class="hud-box">STATUS: SHERIFF PATH</div>
+  <div class="hud-box rutbe">RÜTBE: <span id="hudStatus">BEBEK</span></div>
 </div>
 
 <div class="center">
   <h1>İYİ Kİ DOĞDUN 🤠</h1>
   <div id="age">0</div>
-  <div id="text">Hazır mısın?</div>
-
+  <div id="text">Hazır mısın kovboy?</div>
   <div class="bullets" id="bulletsUI"></div>
-
   <button onclick="shoot()">+1 YAŞ ATLA 🔫</button>
 </div>
 
@@ -195,136 +254,207 @@ button:hover {
 <audio id="music" loop><source src="muzik.mp3"></audio>
 
 <div id="final">
-  <h1>🤠 SHERIFF UNLOCKED</h1>
-  <p style="font-size: 24px; margin-top: 10px;">İYİ Kİ DOĞDUN EMİRHAN ABEE 🤍</p>
-  <button onclick="location.reload()">Kasabaya Dön</button>
+  <h1>🤠 KOVBOY UNLOCKED</h1>
+  <p>İYİ Kİ DOĞDUN EMİRHAN 🤍<br><span style="font-size:0.75em; opacity:0.7;">Kasabanın en tehlikeli kovboyu artık resmen yaşlı.</span></p>
+  <button onclick="location.reload()" style="margin-top:24px;">Kasabaya Dön</button>
 </div>
 
 <script>
-
 let age = 0;
 let bullets = 6;
 let locked = false;
+let activeBg = "A";
 const target = 25;
 
-/* FOTO AKIŞ */
 const photos = [
-  "abim0.jpg",
-  "abim10.jpg",
-  "abim15.jpg",
-  "abim18.jpg",
-  "abim20.jpg",
-  "kovboy.webp"
+  { max: 5,  src: "abim0.jpg"  },
+  { max: 10, src: "abim5.jpg"  },
+  { max: 15, src: "abim10.jpg" },
+  { max: 18, src: "abim15.jpg" },
+  { max: 20, src: "abim18.jpg" },
+  { max: 25, src: "abim20.jpg" },
+  { max: 99, src: "kovboy.webp"}
 ];
 
 const messages = {
-  1: "Başlangıç 🤠",
-  10: "Küçük kovboy",
-  18: "Silah ustası",
-  25: "ŞERİF FORMU 🔥"
+  0:  "Hazır mısın kovboy? Bu tetik kendiliğinden çekilmez.",
+  1:  "Dünyaya geldi. Masum, temiz, hiçbir şeyden habersiz. Annesi mutlu, babası gururlu. Henüz.",
+  2:  "İki yaşında. Yürümeyi öğrendi, durdurmak artık zor.",
+  3:  "Üç yaşında. Her şeyi kırıyor ama suçu hep başkasında buluyor.",
+  4:  "Dört yaşında. Sorular sorulmaya başlandı. Cevaplar hiç tatmin etmedi.",
+  5:  "İlkokul kapıda. Hayat artık biraz daha gerçek, biraz daha acı.",
+  6:  "Altı yaşında. Öğretmenler henüz umudu kesmedi.",
+  7:  "Yedi yaşında. Arkadaşlar seçildi, yanlış seçimler başladı.",
+  8:  "Sekiz yaşında. Oyun bitmek bilmiyor, ders kitabı tozlanıyor.",
+  9:  "Dokuz yaşında. Büyümek istiyor ama büyümenin bedelini bilmiyor.",
+  10: "On yaşında. Çocukluk bitmek üzere. Geriye bak, güzel günlerdi.",
+  11: "On bir yaşında. Bir şeyler değişiyor ama ne olduğunu kimse söylemiyor.",
+  12: "On iki yaşında. İlk sigara. İlk yudum. Öksürdü ama 'iyi geldi' dedi. Artık geri dönüş yok. 🚬🥃",
+  13: "On üç yaşında. Sigara artık alışkanlık, alkol fırsat buldukça. Aile hâlâ bilmiyor.",
+  14: "On dört yaşında. Mahalle köşesi yeni ev oldu. Duman hiç eksik değil.",
+  15: "On beş yaşında. Kovboy ruhu uyanıyor. Kurallara saygı azalıyor, özgürlük artıyor.",
+  16: "On altı yaşında. Sigara paketi artık cepte taşınıyor. Gizleme zahmetine bile girmiyor.",
+  17: "On yedi yaşında. Büyük konuşuyor, büyük içiyor. Sabah kalkmak zorlaşıyor.",
+  18: "On sekiz yaşında. Resmen serbest. Ama zaten serbest yaşıyordu, fark şimdi kağıt üstünde. 🎉",
+  19: "On dokuz yaşında. Hayat hızlanıyor, sigara bitmez, bardak dolmaz.",
+  20: "Yirmi yaşında. Pişmanlık yok. Biraz yorgunluk var ama o da geçer deniyor.",
+  21: "Yirmi bir yaşında. Artık her şey açık, her şey serbest. Karaciğer henüz şikayet etmiyor.",
+  22: "Yirmi iki yaşında. Sabah öksürüğü artık rutin. 'Geçer' deniyor, geçmiyor.",
+  23: "Yirmi üç yaşında. Hâlâ ayakta, hâlâ güçlü. Vücut itiraz ediyor ama kafa dinlemiyor.",
+  24: "Yirmi dört yaşında. Son adım kaldı. Kasaba seni bekliyor kovboy.",
+  25: "YİRMİ BEŞ. ŞERİF FORMU. Kasabanın en tehlikeli, en dumanli, en efsane kovboyu. 🔥🤠"
 };
 
-/* FOTO UPDATE */
-function updatePhoto(){
-  let i = 0;
+const statuses = [
+  { min: 0,  max: 3,  label: "BEBEK"         },
+  { min: 4,  max: 6,  label: "VELET"         },
+  { min: 7,  max: 9,  label: "ÇAYLAK"        },
+  { min: 10, max: 12, label: "SOKAK ÇOCUĞU"  },
+  { min: 13, max: 15, label: "KABADAYI"      },
+  { min: 16, max: 18, label: "SERSERİ"       },
+  { min: 19, max: 21, label: "KÜLHANBEYİ"   },
+  { min: 22, max: 23, label: "EŞKIYA"        },
+  { min: 24, max: 24, label: "KAÇAK"         },
+  { min: 25, max: 99, label: "KOVBOY 🤠"     }
+];
 
-  if(age < 5) i = 0;
-  else if(age < 10) i = 1;
-  else if(age < 15) i = 2;
-  else if(age < 18) i = 3;
-  else if(age < 22) i = 4;
-  else i = 5;
-
-  document.getElementById("bg").style.backgroundImage =
-    `url('${photos[i]}')`;
+function getStatus(a) {
+  return statuses.find(s => a >= s.min && a <= s.max)?.label || "KOVBOY";
 }
 
-/* BULLETS */
-function renderBullets(){
+function getPhoto(a) {
+  return photos.find(p => a < p.max)?.src || "kovboy.webp";
+}
+
+function updatePhoto() {
+  const src = getPhoto(age);
+  const currentDiv = document.getElementById("bg" + activeBg);
+  const nextDiv    = document.getElementById("bg" + (activeBg === "A" ? "B" : "A"));
+
+  if (currentDiv.style.backgroundImage === `url("${src}")` ||
+      currentDiv.style.backgroundImage === `url('${src}')`) return;
+
+  nextDiv.style.backgroundImage = `url('${src}')`;
+  nextDiv.style.opacity = "1";
+  currentDiv.style.opacity = "0";
+  activeBg = activeBg === "A" ? "B" : "A";
+}
+
+function renderBullets() {
   const el = document.getElementById("bulletsUI");
   el.innerHTML = "";
-  for(let i=0;i<6;i++){
+  for (let i = 0; i < 6; i++) {
     const b = document.createElement("div");
     b.className = "bullet" + (i < bullets ? " active" : "");
     el.appendChild(b);
   }
 }
-renderBullets();
 
-/* SHOOT */
-function shoot(){
+function spawnConfetti() {
+  const colors = ["#ffd27d","#ff6b6b","#6bffb8","#6bb5ff","#ff6bde","#fff"];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti-piece";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.width  = (8 + Math.random() * 8) + "px";
+    c.style.height = (8 + Math.random() * 8) + "px";
+    c.style.animationDuration = (1.5 + Math.random() * 2) + "s";
+    c.style.animationDelay    = (Math.random() * 1.5) + "s";
+    document.body.appendChild(c);
+    c.addEventListener("animationend", () => c.remove());
+  }
+}
 
-  if(locked) return;
+function shoot() {
+  if (locked) return;
 
-  const gun = document.getElementById("gun");
-  const reload = document.getElementById("reload");
-  const music = document.getElementById("music");
-  const rt = document.getElementById("reloadText");
+  const gun    = document.getElementById("gun");
+  const reloadAudio = document.getElementById("reload");
+  const music  = document.getElementById("music");
+  const rt     = document.getElementById("reloadText");
 
-  if(age === 0){
-    music.volume = 0.3; // Müzik sesi biraz kısıldı ki silah ve reload patlasın
-    music.play().catch(()=>{});
+  if (age === 0) {
+    music.volume = 0.28;
+    music.play().catch(() => {});
   }
 
-  /* 🔫 RELOAD */
-  if(bullets <= 0){
+  if (bullets <= 0) {
     locked = true;
-
     rt.style.opacity = "1";
 
-    reload.currentTime = 0;
-    reload.volume = 1.0;       // Max ses
-    reload.playbackRate = 1.1; // Daha sert hissiyat
-    reload.play();
+    reloadAudio.currentTime = 0;
+    reloadAudio.volume = 1.0;
+    reloadAudio.playbackRate = 1.05;
+    reloadAudio.play();
 
-    document.body.classList.add("zoom");
+    document.body.style.animation = "shake 0.2s";
+    setTimeout(() => document.body.style.animation = "", 200);
 
-    setTimeout(()=>{
+    setTimeout(() => {
       bullets = 6;
-      locked = false;
+      locked  = false;
       renderBullets();
       rt.style.opacity = "0";
-      document.body.classList.remove("zoom");
-    },1300);
-
+    }, 1400);
     return;
   }
 
   bullets--;
   age++;
 
-  /* gun */
   gun.currentTime = 0;
-  gun.volume = 0.8; 
-  gun.playbackRate = 0.95 + Math.random()*0.1;
+
+  if (age === 12) {
+    gun.volume = 0.9;
+    gun.playbackRate = 0.82 + Math.random() * 0.08;
+  } else {
+    gun.volume = 0.9;
+    gun.playbackRate = 0.82 + Math.random() * 0.08;
+  }
+
   gun.play();
 
-  /* shake */
   document.body.style.animation = "shake 0.15s";
-  setTimeout(()=>document.body.style.animation="",150);
+  setTimeout(() => document.body.style.animation = "", 150);
+  const ageEl = document.getElementById("age");
+  ageEl.style.transform = "scale(1.25)";
+  setTimeout(() => ageEl.style.transform = "scale(1)", 130);
 
-  /* UI */
-  document.getElementById("age").innerText = age;
-  document.getElementById("hudAge").innerText = age;
-  document.getElementById("text").innerText =
-    messages[age] || "Yol devam ediyor...";
-
-  /* zoom pop */
-  const a = document.getElementById("age");
-  a.style.transform = "scale(1.2)";
-  setTimeout(()=>a.style.transform="scale(1)",120);
+  document.getElementById("age").innerText      = age;
+  document.getElementById("hudStatus").innerText = getStatus(age);
+  document.getElementById("text").innerText      = messages[age] || "Yol devam ediyor...";
 
   renderBullets();
   updatePhoto();
 
-  if(age >= target){
-    document.getElementById("final").style.display = "flex";
+  if (age >= target) {
+    setTimeout(() => {
+      document.querySelectorAll("#bgA::after, #bgB::after").forEach(el => {
+        el.style.filter = "brightness(1) contrast(1) saturate(1)";
+      });
+      document.querySelector(".overlay").style.opacity = "0";
+      document.querySelector(".overlay").style.transition = "opacity 0.8s ease";
+
+      // UI'yi gizle
+      document.querySelector(".hud").style.opacity = "0";
+      document.querySelector(".center").style.opacity = "0";
+      document.querySelector(".hud").style.transition = "opacity 0.5s";
+      document.querySelector(".center").style.transition = "opacity 0.5s";
+
+      setTimeout(() => {
+        const f = document.getElementById("final");
+        f.style.display = "flex";
+        spawnConfetti();
+      }, 900);
+    }, 400);
   }
 }
 
-updatePhoto();
-
+// init
+document.getElementById("bgA").style.backgroundImage = `url('${getPhoto(0)}')`;
+renderBullets();
+document.getElementById("text").innerText = messages[0];
 </script>
-
 </body>
 </html>
