@@ -383,10 +383,10 @@ function shoot() {
     locked = true;
     rt.style.opacity = "1";
 
-    reloadAudio.currentTime = 0;
-    reloadAudio.volume = 1.0;
-    reloadAudio.playbackRate = 1.05;
-    reloadAudio.play();
+    const reloadClone = new Audio("reload.mp3");
+    reloadClone.volume = 1.0;
+    reloadClone.playbackRate = 0.9;
+    reloadClone.play();
 
     document.body.style.animation = "shake 0.2s";
     setTimeout(() => document.body.style.animation = "", 200);
@@ -404,15 +404,8 @@ function shoot() {
   age++;
 
   gun.currentTime = 0;
-
-  if (age === 12) {
-    gun.volume = 0.9;
-    gun.playbackRate = 0.82 + Math.random() * 0.08;
-  } else {
-    gun.volume = 0.9;
-    gun.playbackRate = 0.82 + Math.random() * 0.08;
-  }
-
+  gun.volume = 0.5;
+  gun.playbackRate = 0.82 + Math.random() * 0.08;
   gun.play();
 
   document.body.style.animation = "shake 0.15s";
