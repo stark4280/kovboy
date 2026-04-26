@@ -383,10 +383,20 @@ function shoot() {
     locked = true;
     rt.style.opacity = "1";
 
-    const reloadClone = new Audio("reload.mp3");
-    reloadClone.volume = 1.0;
-    reloadClone.playbackRate = 0.9;
-    reloadClone.play();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    fetch("reload.mp3")
+      .then(r => r.arrayBuffer())
+      .then(buf => audioCtx.decodeAudioData(buf))
+      .then(decoded => {
+        const source = audioCtx.createBufferSource();
+        const gain   = audioCtx.createGain();
+        gain.gain.value = 3.0;
+        source.buffer = decoded;
+        source.playbackRate.value = 0.9;
+        source.connect(gain);
+        gain.connect(audioCtx.destination);
+        source.start(0);
+      });
 
     document.body.style.animation = "shake 0.2s";
     setTimeout(() => document.body.style.animation = "", 200);
@@ -404,7 +414,7 @@ function shoot() {
   age++;
 
   gun.currentTime = 0;
-  gun.volume = 0.5;
+  gun.volume = 0.3;
   gun.playbackRate = 0.82 + Math.random() * 0.08;
   gun.play();
 
