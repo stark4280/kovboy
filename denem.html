@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Western Birthday 🤠</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: 'Cinzel', serif;
+  overflow: hidden;
+  background: black;
+  color: #f5e6c8;
+}
+
+/* FOTO LAYER - FULL CENTER CONTROL */
+#bg {
+  position: fixed;
+  inset: 0;
+  background-size: contain;      
+  background-position: center;   
+  background-repeat: no-repeat;  
+  background-color: #000;        
+  transition: all 0.6s ease;
+  filter: brightness(0.75) contrast(1.05);
+  z-index: 0;
+}
+
+/* cinematic overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.9));
+  z-index: 1;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.hud-box {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,215,0,0.25);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* CENTER UI */
+.center {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+h1 {
+  font-size: 52px;
+  margin: 0;
+}
+
+#age {
+  font-size: 120px;
+  margin: 10px 0;
+  transition: transform .12s ease;
+}
+
+#text {
+  opacity: 0.85;
+  min-height: 25px;
+  font-size: 20px;
+}
+
+/* BUTTON */
+button {
+  margin-top: 20px;
+  padding: 14px 30px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,215,0,0.4);
+  background: rgba(0,0,0,0.5);
+  color: #ffd27d;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  background: rgba(255,215,0,0.2);
+}
+
+/* BULLETS */
+.bullets {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.bullet {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #ffd27d;
+}
+
+.bullet.active {
+  background: #ffd27d;
+  box-shadow: 0 0 5px #ffd27d;
+}
+
+/* RELOAD TEXT */
+#reloadText {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffd27d;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+  pointer-events: none;
+}
+
+/* shake */
+@keyframes shake {
+  0% { transform: translate(0); }
+  25% { transform: translate(3px,-3px); }
+  50% { transform: translate(-3px,3px); }
+  75% { transform: translate(3px,3px); }
+  100% { transform: translate(0); }
+}
+
+/* zoom effect */
+.zoom {
+  transform: scale(1.03);
+  transition: transform 0.15s ease;
+}
+
+/* FINAL */
+#final {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0,0,0,0.92);
+  z-index: 10;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div class="overlay"></div>
+
+<div class="hud">
+  <div class="hud-box">AGE: <span id="hudAge">0</span></div>
+  <div class="hud-box">STATUS: SHERIFF PATH</div>
+</div>
+
+<div class="center">
+  <h1>İYİ Kİ DOĞDUN 🤠</h1>
+  <div id="age">0</div>
+  <div id="text">Hazır mısın?</div>
+
+  <div class="bullets" id="bulletsUI"></div>
+
+  <button onclick="shoot()">+1 YAŞ ATLA 🔫</button>
+</div>
+
+<div id="reloadText">ŞARJÖR DOLDURULUYOR...</div>
+
+<audio id="gun"><source src="silah.mp3"></audio>
+<audio id="reload"><source src="reload.mp3"></audio>
+<audio id="music" loop><source src="muzik.mp3"></audio>
+
+<div id="final">
+  <h1>🤠 SHERIFF UNLOCKED</h1>
+  <p style="font-size: 24px; margin-top: 10px;">İYİ Kİ DOĞDUN EMİRHAN ABEE 🤍</p>
+  <button onclick="location.reload()">Kasabaya Dön</button>
+</div>
+
+<script>
+
+let age = 0;
+let bullets = 6;
+let locked = false;
+const target = 25;
+
+/* FOTO AKIŞ */
+const photos = [
+  "abim0.jpg",
+  "abim10.jpg",
+  "abim15.jpg",
+  "abim18.jpg",
+  "abim20.jpg",
+  "kovboy.webp"
+];
+
+const messages = {
+  1: "Başlangıç 🤠",
+  10: "Küçük kovboy",
+  18: "Silah ustası",
+  25: "ŞERİF FORMU 🔥"
+};
+
+/* FOTO UPDATE */
+function updatePhoto(){
+  let i = 0;
+
+  if(age < 5) i = 0;
+  else if(age < 10) i = 1;
+  else if(age < 15) i = 2;
+  else if(age < 18) i = 3;
+  else if(age < 22) i = 4;
+  else i = 5;
+
+  document.getElementById("bg").style.backgroundImage =
+    `url('${photos[i]}')`;
+}
+
+/* BULLETS */
+function renderBullets(){
+  const el = document.getElementById("bulletsUI");
+  el.innerHTML = "";
+  for(let i=0;i<6;i++){
+    const b = document.createElement("div");
+    b.className = "bullet" + (i < bullets ? " active" : "");
+    el.appendChild(b);
+  }
+}
+renderBullets();
+
+/* SHOOT */
+function shoot(){
+
+  if(locked) return;
+
+  const gun = document.getElementById("gun");
+  const reload = document.getElementById("reload");
+  const music = document.getElementById("music");
+  const rt = document.getElementById("reloadText");
+
+  if(age === 0){
+    music.volume = 0.3; // Müzik sesi biraz kısıldı ki silah ve reload patlasın
+    music.play().catch(()=>{});
+  }
+
+  /* 🔫 RELOAD */
+  if(bullets <= 0){
+    locked = true;
+
+    rt.style.opacity = "1";
+
+    reload.currentTime = 0;
+    reload.volume = 1.0;       // Max ses
+    reload.playbackRate = 1.1; // Daha sert hissiyat
+    reload.play();
+
+    document.body.classList.add("zoom");
+
+    setTimeout(()=>{
+      bullets = 6;
+      locked = false;
+      renderBullets();
+      rt.style.opacity = "0";
+      document.body.classList.remove("zoom");
+    },1300);
+
+    return;
+  }
+
+  bullets--;
+  age++;
+
+  /* gun */
+  gun.currentTime = 0;
+  gun.volume = 0.8; 
+  gun.playbackRate = 0.95 + Math.random()*0.1;
+  gun.play();
+
+  /* shake */
+  document.body.style.animation = "shake 0.15s";
+  setTimeout(()=>document.body.style.animation="",150);
+
+  /* UI */
+  document.getElementById("age").innerText = age;
+  document.getElementById("hudAge").innerText = age;
+  document.getElementById("text").innerText =
+    messages[age] || "Yol devam ediyor...";
+
+  /* zoom pop */
+  const a = document.getElementById("age");
+  a.style.transform = "scale(1.2)";
+  setTimeout(()=>a.style.transform="scale(1)",120);
+
+  renderBullets();
+  updatePhoto();
+
+  if(age >= target){
+    document.getElementById("final").style.display = "flex";
+  }
+}
+
+updatePhoto();
+
+</script>
+
+</body>
+</html>
