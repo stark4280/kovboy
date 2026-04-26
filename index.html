@@ -212,7 +212,75 @@ button:hover {
   margin-top: 10px;
 }
 
-/* KONFETI */
+/* SES PANELİ */
+#soundPanel {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+#muteBtn {
+  background: none;
+  border: none;
+  color: #ffd27d;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  text-shadow: none;
+}
+
+#musicBtn {
+  background: none;
+  border: none;
+  color: #ffd27d;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  text-shadow: none;
+}
+#musicBtn:hover { transform: scale(1.2); background: none; }
+
+#volSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 90px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,215,0,0.3);
+  outline: none;
+  cursor: pointer;
+}
+
+#volSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffd27d;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(255,210,125,0.6);
+}
+
+#volSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffd27d;
+  cursor: pointer;
+  border: none;
+}
 .confetti-piece {
   position: fixed;
   width: 10px;
@@ -253,7 +321,13 @@ button:hover {
 <audio id="reload"><source src="reload.mp3"></audio>
 <audio id="music" loop><source src="muzik.mp3"></audio>
 
-<div id="final">
+<div id="soundPanel">
+  <button id="muteBtn" onclick="toggleMute()">🔊</button>
+  <input id="volSlider" type="range" min="0" max="100" value="30" oninput="setVolume(this.value)">
+  <button id="musicBtn" onclick="toggleMusic()">🎵</button>
+</div>
+
+<!-- KONFETI -->
   <h1>🤠 KOVBOY UNLOCKED</h1>
   <p>İYİ Kİ DOĞDUN EMİRHAN 🤍<br><span style="font-size:0.75em; opacity:0.7;">Kasabanın en tehlikeli kovboyu artık resmen yaşlı.</span></p>
   <button onclick="location.reload()" style="margin-top:24px;">Kasabaya Dön</button>
@@ -268,10 +342,51 @@ const target = 25;
 
 // Ses
 let audioCtx = null;
+let sfxVolume = 0.027; // slider 30 = (30/100)^3
+let muted = false;
+let musicMuted = false;
+
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") audioCtx.resume();
   return audioCtx;
+}
+
+// logaritmik ölçek: ortası (50) → 0.125, 30 → ~0.027
+function sliderToVolume(val) {
+  return Math.pow(val / 100, 3);
+}
+
+function setVolume(val) {
+  sfxVolume = sliderToVolume(val);
+  muted = sfxVolume === 0;
+  document.getElementById("muteBtn").textContent = muted ? "🔇" : "🔊";
+}
+
+function toggleMute() {
+  muted = !muted;
+  const slider = document.getElementById("volSlider");
+  if (muted) {
+    slider.value = 0;
+    sfxVolume = 0;
+    document.getElementById("muteBtn").textContent = "🔇";
+  } else {
+    slider.value = 30;
+    sfxVolume = sliderToVolume(30);
+    document.getElementById("muteBtn").textContent = "🔊";
+  }
+}
+
+function toggleMusic() {
+  const music = document.getElementById("music");
+  musicMuted = !musicMuted;
+  if (musicMuted) {
+    music.pause();
+    document.getElementById("musicBtn").textContent = "🔕";
+  } else {
+    music.play().catch(() => {});
+    document.getElementById("musicBtn").textContent = "🎵";
+  }
 }
 
 const photos = [
@@ -392,7 +507,7 @@ function shoot() {
     rt.style.opacity = "1";
 
     reloadAudio.currentTime = 0;
-    reloadAudio.volume = 1.0;
+    reloadAudio.volume = muted ? 0 : Math.min(1, sfxVolume * 8);
     reloadAudio.playbackRate = 0.9;
     reloadAudio.play().catch(() => {});
 
@@ -412,7 +527,7 @@ function shoot() {
   age++;
 
   gun.currentTime = 0;
-  gun.volume = 0.05;
+  gun.volume = muted ? 0 : sfxVolume;
   gun.playbackRate = 0.82 + Math.random() * 0.08;
   gun.play().catch(() => {});
 
